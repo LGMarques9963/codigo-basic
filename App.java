@@ -6,32 +6,33 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class App {
+
     public static void main(String[] args) throws Exception {
         loadProgram();
     }
 
     public static void loadProgram() {
-        String currDir = Paths.get("basic.bas").toAbsolutePath().toString();
-        String nameComplete = currDir;
-        Path path2 = Paths.get(nameComplete);
-        TreeMap<Integer, String[]> map = new TreeMap<Integer, String[]>();
-        try (Scanner sc = new Scanner(Files.newBufferedReader(path2, Charset.defaultCharset()))) {
+        String caminhoAtual = Paths.get("basic.bas").toAbsolutePath().toString();
+        Path caminho = Paths.get(caminhoAtual);
+        TreeMap<Integer, String[]> map = new TreeMap<>();
+        try (Scanner sc = new Scanner(Files.newBufferedReader(caminho, Charset.defaultCharset()))) {
             
             int c = 10;
 
             while (sc.hasNextLine()) {
                 String line = sc.nextLine();
-                String[] tokens = line.split(" ");
-                int chave = Integer.parseInt(tokens[0]);
-                tokens[0] = Integer.toString(c);
+                String[] comandos = line.split(" ");
+                int chave = Integer.parseInt(comandos[0]);
+
+                comandos[0] = Integer.toString(c);
                 c+=10;
-                System.out.println(tokens[0].toString());
-                map.put(chave, tokens);
+                
+                map.put(chave, comandos);
             }
-            System.out.println(map);
             writeProgram(map);
         } catch (IOException x) {
             System.err.format("Erro de E/S: %s%n", x);
@@ -39,33 +40,27 @@ public class App {
 
     }
 
-    public static void writeProgram(TreeMap<Integer, String[]> input) throws IOException {
+    public static void writeProgram(SortedMap<Integer, String[]> input) throws IOException {
         
-        BufferedWriter writer = new BufferedWriter(new FileWriter("arquivo-rn.bas"));
-        for (var item : input.entrySet()) {
-            String concat = "";
-            for (int i = 0; i < item.getValue().length; i++) {
-                String comando = item.getValue()[i];
-                concat += comando + " ";
-                if (comando.equals("gosub") || comando.equals("goto")) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("arquivo-rn.bas"))) {
+            for (var item : input.values()) {
+                StringBuilder concat = new StringBuilder();
+                for (int i = 0; i < item.length; i++) {
+                    String comando = item[i];
+                    concat.append(comando + " ");
+                    if (comando.equals("gosub") || comando.equals("goto")) {
 
-                    int comandoSeguinte = Integer.parseInt(item.getValue()[i + 1]);
-                    item.getValue()[i + 1] = input.get(comandoSeguinte)[0];
+                        int comandoSeguinte = Integer.parseInt(item[i + 1]);
+                        item[i + 1] = input.get(comandoSeguinte)[0];
+                    }
                 }
+                System.out.println(concat);
+                writer.write(concat+"\n");
             }
-            System.out.println(concat);
-            writer.write(concat+"\n");
+
+        } catch (NumberFormatException e) {
+            System.out.println("Erro de E/S");
         }
-        writer.close();
     }
 
 }
-/*
- * String frase = "";
- * for(int i =0; i < item.getValue().length; i++){
- * frase += new String(comando+" ");
- * if(i == item.getValue().length-1){
- * frase += "\n";
- * }
- * }
- */ // writer.write(frase);
